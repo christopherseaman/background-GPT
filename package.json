@@ -1,0 +1,12 @@
+{
+  "name": "chat-gpt",
+  "version": "1.0.0",
+  "main": "main2.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^31.2.0",
+    "menubar": "^9.5.0"
+  }
+}
