@@ -3,13 +3,20 @@ const { app, nativeImage, globalShortcut, Menu } = require('electron')
 const path = require('path')
 
 let tray = null
+let windowPosition = {}
 
 // Use menubar for the window management
 const mb = menubar({
   index: 'https://chatgpt.com', // Replace with your URL
-  preloadWindow: true
+  preloadWindow: true,
+  browserWindow: {
+    alwaysOnTop: true, // Keeps the window always on top
+    movable: true, // Allows the window to be moved
+    frame: true, // Adds a frame to the window for dragging
+  }
 })
 
+// Event listeners
 mb.on('ready', () => {
   console.log('Menubar app is ready.')
 
@@ -23,15 +30,27 @@ mb.on('ready', () => {
   tray.setImage(trayIcon)
 
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Show App', click: () => { mb.showWindow() } },
+    {
+      label: 'Toggle App', 
+      click: () => { 
+        if (mb.window.isVisible()) {
+          windowPosition = mb.window.getBounds()
+          mb.hideWindow()
+        } else {
+          mb.showWindow()
+        }
+      }
+    },
     { label: 'Quit', click: () => { app.quit() } }
   ])
-  tray.setToolTip('AppName') // Replace with your app name
+
+  tray.setToolTip('ChatGPT') // Replace with your app name
   tray.setContextMenu(contextMenu)
 
   // Register a global shortcut
   const ret = globalShortcut.register('Alt+Space', () => {
     if (mb.window.isVisible()) {
+      windowPosition = mb.window.getBounds()
       mb.hideWindow()
     } else {
       mb.showWindow()
@@ -51,6 +70,12 @@ mb.on('after-create-window', () => {
     event.preventDefault()
     require('electron').shell.openExternal(url)
   })
+})
+
+mb.on('after-show', () => {
+  if (Object.keys(windowPosition).length) {
+    mb.window.setBounds(windowPosition)
+  }
 })
 
 // Unregister the global shortcut when the app quits
