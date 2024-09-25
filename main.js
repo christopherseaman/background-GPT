@@ -4,10 +4,12 @@ const path = require('path')
 
 let tray = null
 let windowPosition = {}
+let currentUrl = 'https://claude.ai'
 
 // Use menubar for the window management
 const mb = menubar({
-  index: 'https://chatgpt.com', // Replace with your URL
+  // index: 'https://chatgpt.com', 
+  index: currentUrl,
   preloadWindow: true,
   browserWindow: {
     alwaysOnTop: true, // Keeps the window always on top
@@ -29,7 +31,31 @@ mb.on('ready', () => {
   tray = mb.tray // Access the tray object from menubar
   tray.setImage(trayIcon)
 
+  tray.on('click', (event, bounds) => {
+    // Do nothing or add custom behavior here
+    console.log('Tray icon clicked')
+  });
+
   const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'ChatGPT',
+      type: 'radio',
+      checked: currentUrl === 'https://chatgpt.com',
+      click: () => {
+        currentUrl = 'https://chatgpt.com';
+        mb.window.loadURL(currentUrl);
+      }
+    },
+    {
+      label: 'Claude.ai',
+      type: 'radio',
+      checked: currentUrl === 'https://claude.ai',
+      click: () => {
+        currentUrl = 'https://claude.ai';
+        mb.window.loadURL(currentUrl);
+      }
+    },
+    { type: 'separator' },
     {
       label: 'Toggle App', 
       click: () => { 
@@ -44,7 +70,7 @@ mb.on('ready', () => {
     { label: 'Quit', click: () => { app.quit() } }
   ])
 
-  tray.setToolTip('ChatGPT') // Replace with your app name
+  tray.setToolTip('Background-GPT') // Replace with your app name
   tray.setContextMenu(contextMenu)
 
   // Register a global shortcut
