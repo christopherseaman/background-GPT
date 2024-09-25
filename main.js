@@ -8,14 +8,16 @@ let currentUrl = 'https://claude.ai'
 
 // Use menubar for the window management
 const mb = menubar({
-  // index: 'https://chatgpt.com', 
   index: currentUrl,
   preloadWindow: true,
   browserWindow: {
-    alwaysOnTop: true, // Keeps the window always on top
-    movable: true, // Allows the window to be moved
-    frame: true, // Adds a frame to the window for dragging
-  }
+    alwaysOnTop: true,
+    movable: true,
+    frame: true,
+  },
+  showOnAllWorkspaces: false,
+  showDockIcon: false,
+  showOnRightClick: false,
 })
 
 // Event listeners
@@ -23,18 +25,15 @@ mb.on('ready', () => {
   console.log('Menubar app is ready.')
 
   // Create tray icon using nativeImage
-  const iconPath = path.join(__dirname, 'icon_square.png') // Ensure the path to your icon
+  const iconPath = path.join(__dirname, 'icon_square.png')
   let trayIcon = nativeImage.createFromPath(iconPath)
-  // Optionally resize the icon if needed
-  trayIcon = trayIcon.resize({ width: 16, height: 16 }) // Adjust size if necessary
+  trayIcon = trayIcon.resize({ width: 16, height: 16 })
 
-  tray = mb.tray // Access the tray object from menubar
+  tray = mb.tray
   tray.setImage(trayIcon)
 
-  tray.on('click', (event, bounds) => {
-    // Do nothing or add custom behavior here
-    console.log('Tray icon clicked')
-  });
+  // Prevent the default toggle behavior
+  mb.tray.removeAllListeners('click')
 
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -58,38 +57,33 @@ mb.on('ready', () => {
     { type: 'separator' },
     {
       label: 'Toggle App', 
-      click: () => { 
-        if (mb.window.isVisible()) {
-          windowPosition = mb.window.getBounds()
-          mb.hideWindow()
-        } else {
-          mb.showWindow()
-        }
-      }
+      click: toggleApp
     },
     { label: 'Quit', click: () => { app.quit() } }
   ])
 
-  tray.setToolTip('Background-GPT') // Replace with your app name
+  tray.setToolTip('Background-GPT')
   tray.setContextMenu(contextMenu)
 
   // Register a global shortcut
-  const ret = globalShortcut.register('Alt+Space', () => {
-    if (mb.window.isVisible()) {
-      windowPosition = mb.window.getBounds()
-      mb.hideWindow()
-    } else {
-      mb.showWindow()
-    }
-  })
+  const ret = globalShortcut.register('Alt+Space', toggleApp)
 
   if (!ret) {
     console.log('Registration failed')
   }
 
-  // Check whether the shortcut is registered
   console.log(globalShortcut.isRegistered('Alt+Space'))
 })
+
+// Helper function to toggle the app
+function toggleApp() {
+  if (mb.window.isVisible()) {
+    windowPosition = mb.window.getBounds()
+    mb.hideWindow()
+  } else {
+    mb.showWindow()
+  }
+}
 
 mb.on('after-create-window', () => {
   mb.window.webContents.on('new-window', (event, url) => {
